@@ -94,7 +94,7 @@ public final class Animations implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        game.actionPerformed(e);
+        game.actionPerformed();
 
         if(lostLife&& !game.pacman.deathAnimation){
             lostLife=false;
