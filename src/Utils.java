@@ -16,6 +16,7 @@ public class Utils {
     public final static int NUM_COLUMNS=21;
     public final static int NUM_ROWS=21;
     public final static int NUM_FOOD=150;
+    public final static int LIVES=3;
 
     public final static int CHASE_MODE=80;
     public final static int SCATTER_MODE=81;

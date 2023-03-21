@@ -45,7 +45,6 @@ public class Game extends JPanel{
     Game(MainPanel parent, int highscore){
         this.highscore=highscore;
         this.parent=parent;
-        animations=new Animations(this);
 
         map= new int[21][21];
         copyMap();
@@ -55,14 +54,12 @@ public class Game extends JPanel{
         pacman=new Pacman();
         ghost= new Ghost[4];
         for(int i=0; i<ghost.length;i++){
-            ghost[0]= new Ghost(0,this);
-            ghost[1]= new Ghost(1,this);
-            ghost[2]= new Ghost(2,this);
-            ghost[3]= new Ghost(3,this);
+            ghost[i]= new Ghost(i,this);
         }
+
         fruit= new Fruit(Utils.CHERRIES);
 
-        lives=3;
+        lives=Utils.LIVES;
         score=0;
         level=0;
         ghostsEaten=0;
@@ -74,10 +71,8 @@ public class Game extends JPanel{
         drawOneUp=false;
         gameOver=false;
         extraLifeAdded=false;
-
+        animations=new Animations(this);
         newLevel();
-        start();
-
         pacmanLastProcessed=System.currentTimeMillis();
         ghostLastProcessed= new long[ghost.length];
         for(long g:ghostLastProcessed){
@@ -96,7 +91,6 @@ public class Game extends JPanel{
     public void start(){
         animations.start();
     }
-
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -140,26 +134,26 @@ public class Game extends JPanel{
                             g.drawImage(fruit.getSprite(), j*Utils.CELL_LENGTH, i*Utils.CELL_LENGTH,this);
                         }
                     }
-                    case Utils.RED->{
-                        g.setColor(Color.RED);
-                        g.fillRect(j * Utils.CELL_LENGTH,
-                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                    }
-                    case Utils.CYAN->{
-                        g.setColor(Color.CYAN);
-                        g.fillRect(j * Utils.CELL_LENGTH,
-                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                    }
-                    case Utils.PINK->{
-                        g.setColor(Color.PINK);
-                        g.fillRect(j * Utils.CELL_LENGTH,
-                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                    }
-                    case Utils._ORANGE->{
-                        g.setColor(Color.ORANGE);
-                        g.fillRect(j * Utils.CELL_LENGTH,
-                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                    }
+//                    case Utils.RED->{
+//                        g.setColor(Color.RED);
+//                        g.fillRect(j * Utils.CELL_LENGTH,
+//                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+//                    }
+//                    case Utils.CYAN->{
+//                        g.setColor(Color.CYAN);
+//                        g.fillRect(j * Utils.CELL_LENGTH,
+//                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+//                    }
+//                    case Utils.PINK->{
+//                        g.setColor(Color.PINK);
+//                        g.fillRect(j * Utils.CELL_LENGTH,
+//                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+//                    }
+//                    case Utils._ORANGE->{
+//                        g.setColor(Color.ORANGE);
+//                        g.fillRect(j * Utils.CELL_LENGTH,
+//                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+//                    }
                 }
             }
         }
@@ -191,7 +185,6 @@ public class Game extends JPanel{
             g.setFont(new Font(Font.SANS_SERIF,Font.BOLD,12));
             g.drawString(String.valueOf(ghostBonusPoints),ghostBonus_x,ghostBonus_y);
         }
-
         if(drawOneUp){
             g.setColor(Color.PINK);
             g.setFont(new Font(Font.SANS_SERIF,Font.BOLD,12));
@@ -216,8 +209,7 @@ public class Game extends JPanel{
         }
     }
 
-    public void actionPerformed(ActionEvent e) {
-        System.out.println(System.currentTimeMillis()-lastprocessed);
+    public void actionPerformed() {
         lastprocessed=System.currentTimeMillis();
         checkTimers();
         checkEntityDelays();
@@ -322,7 +314,7 @@ public class Game extends JPanel{
     private boolean inTunnel(Entity entity) {
         if(!entity.isPacman){
             if(entity.y_location==9*Utils.CELL_LENGTH){
-                if((entity.x_location<1*Utils.CELL_LENGTH) || (entity.x_location>19*Utils.CELL_LENGTH)){
+                if((entity.x_location<Utils.CELL_LENGTH) || (entity.x_location>19*Utils.CELL_LENGTH)){
                     entity.inTunnel=true;
                     return true;
                 }
@@ -483,7 +475,7 @@ public class Game extends JPanel{
         int current_x=entity.x_location;
         int current_y=entity.y_location;
 
-        if(current_x<=pacman_x+3 && current_x>=pacman_x-3 && current_y<=pacman_y+3 && current_y>=pacman_y-3){
+        if(current_x<=pacman_x+5 && current_x>=pacman_x-5 && current_y<=pacman_y+5 && current_y>=pacman_y-5){
             if(!entity.isFrightened && !entity.isDead)
                 lostLife();
             else if(entity.isFrightened)
