@@ -4,6 +4,7 @@ public class Pacman extends Entity{
     private Image sprite;
     private Image[][] spriteList;
     private Image[] spriteDeathList;
+    public int new_x_direction, new_y_direction;
     int deathCounter;
     boolean deathAnimation;
     int deathSpeed;

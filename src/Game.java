@@ -3,84 +3,66 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 
 public class Game extends JPanel{
-    int [][]INTERSECTIONS_MAP={ {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-    {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
-    {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
-    {0,1,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,1,0},
-    {0,1,2,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,2,1,0},
-    {0,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1,0},
-    {0,1,1,1,1,2,1,1,1,0,1,0,1,1,1,2,1,1,1,1,0},
-    {0,0,0,0,1,2,1,0,0,0,0,0,0,0,1,2,1,0,0,0,0},
-    {1,1,1,1,1,2,1,0,1,1,-1,1,1,0,1,2,1,1,1,1,1},
-    {0,0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,0,0},
-    {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
-    {0,0,0,0,1,2,1,0,0,0,4,0,0,0,1,2,1,0,0,0,0},
-    {0,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,0},
-    {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
-    {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
-    {0,1,2,2,1,2,2,2,2,2,0,2,2,2,2,2,1,2,2,1,0},
-    {0,1,1,2,1,2,1,2,1,1,1,1,1,2,1,2,1,2,1,1,0},
-    {0,1,3,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,3,1,0},
-    {0,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,0},
-    {0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
-    {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0}};
-
-    MainPanel parent;
-    Animations animations;
-    Pacman pacman;
-    Ghost[] ghost;
-    Fruit fruit;
+    public MainPanel parent;
+    private Animations animations;
+    public Pacman pacman;
+    public Ghost[] ghost;
+    private Fruit fruit;
 
     public int [][]map;
+    private int [][]intersection_map;
 
-    int score;
-    int highscore;
-    int lives;
-    int foodCount;
-    int level;
-    int ghostsEaten;
+    public int score;
+    private int highscore;
+    public int lives;
+    public int foodCount;
+    public int level;
+    private int ghostsEaten;
 
-    boolean fruitVisible;
-    boolean fruitUsed;
-    boolean drawFruitPoints;
-    boolean drawGhostPoints;
-    boolean drawOneUp;
-    boolean gameOver;
-    boolean drawReady;
-    boolean extraLifeAdded;
+    public boolean fruitVisible;
+    private boolean fruitUsed;
+    private boolean drawFruitPoints;
+    private boolean drawGhostPoints;
+    private boolean drawOneUp;
+    public boolean gameOver;
+    public boolean drawReady;
+    private boolean extraLifeAdded;
 
-    long fruitTimeStamp;
-    long fruitPaintStamp;
-    long oneUpPaintStamp;
-    long ghostPointsPaintStamp;
+    private long fruitTimeStamp;
+    private long fruitPaintStamp;
+    private long oneUpPaintStamp;
+    private long ghostPointsPaintStamp;
 
-    long lastprocessed;
-    long pacmanLastProcessed;
-    long []ghostLastProcessed;
+    private long lastprocessed;
+    private long pacmanLastProcessed;
+    private long []ghostLastProcessed;
 
-    int ghostBonus_x,ghostBonus_y;
-    int oneUp_x,oneUp_y;
+    private int ghostBonus_x,ghostBonus_y;
+    private int oneUp_x,oneUp_y;
 
-    int ghostBonusPoints;
+    private int ghostBonusPoints;
 
-    Game(MainPanel parent, int highscore){
+    public Game(MainPanel parent, int highscore){
         this.highscore=highscore;
         this.parent=parent;
 
         map= new int[21][21];
-
+        intersection_map= new int[map.length][map[0].length];
         copyMap();
         createIntersectionMap();
-        setBackground(Color.BLACK);
-
 
         pacman=new Pacman();
-        ghost= new Ghost[4];
+        ghost= new Ghost[0];
         for(int i=0; i<ghost.length;i++){
             ghost[i]= new Ghost(i,this);
         }
-
         fruit= new Fruit(Utils.CHERRIES);
+
+        pacmanLastProcessed=System.currentTimeMillis();
+        ghostLastProcessed= new long[ghost.length];
+        for(long g:ghostLastProcessed){
+            g=System.currentTimeMillis();
+        }
 
         lives=Utils.LIVES;
         score=0;
@@ -94,29 +76,12 @@ public class Game extends JPanel{
         drawOneUp=false;
         gameOver=false;
         extraLifeAdded=false;
+
         animations=new Animations(this);
         newLevel();
-        pacmanLastProcessed=System.currentTimeMillis();
-        ghostLastProcessed= new long[ghost.length];
-        for(long g:ghostLastProcessed){
-            g=System.currentTimeMillis();
-        }
 
         lastprocessed=System.currentTimeMillis();
-    }
-
-    private void createIntersectionMap() {
-        for(int i=0; i<map.length;i++){
-            for(int j=0; j<map[i].length;j++){
-                if(isAtIntersection(i,j)){
-                    INTERSECTIONS_MAP[i][j]=1;
-                }
-                else
-                    INTERSECTIONS_MAP[i][j]=0;
-            }
-        }
-
-
+        setBackground(Color.BLACK);
     }
 
     public void copyMap() {
@@ -124,7 +89,39 @@ public class Game extends JPanel{
             System.arraycopy(Utils.INITIAL_MAP[i], 0, map[i], 0, map.length);
         }
     }
+    private void createIntersectionMap() {
+        for(int i=0; i<map.length;i++){
+            for(int j=0; j<map[i].length;j++){
+                if(isAtIntersection(i,j)){
+                    intersection_map[i][j]=1;
+                }
+                else
+                    intersection_map[i][j]=0;
+            }
+        }
 
+
+    }
+    private boolean isAtIntersection(int x, int y){
+        int numRoutes=0;
+
+        if(map[x][y]==0 || map[x][y]==2){
+            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2)){
+                numRoutes++;
+            }
+            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2)){
+                numRoutes++;
+            }
+            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2)){
+                numRoutes++;
+            }
+            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2)){
+                numRoutes++;
+            }
+        }
+
+        return numRoutes > 2;
+    }
     public void start(){
         animations.start();
     }
@@ -245,9 +242,9 @@ public class Game extends JPanel{
             g.drawString("READY !",Utils.CELL_LENGTH*9+10,Utils.CELL_LENGTH*12-3);
         }
 
-        for(int i=0; i<INTERSECTIONS_MAP.length; i++){
-            for(int j=0; j<INTERSECTIONS_MAP[i].length;j++){
-                if(INTERSECTIONS_MAP[i][j]==1){
+        for(int i=0; i<intersection_map.length; i++){
+            for(int j=0; j<intersection_map[i].length;j++){
+                if(intersection_map[i][j]==1){
                     g.setColor(Color.GREEN);
                     g.fillRect(j * Utils.CELL_LENGTH,
                             i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
@@ -258,10 +255,45 @@ public class Game extends JPanel{
 
     public void actionPerformed() {
         lastprocessed=System.currentTimeMillis();
+
         checkTimers();
         checkEntityDelays();
         checkStatus();
         repaint();
+    }
+
+    private void checkTimers() {
+        if(drawFruitPoints && System.currentTimeMillis()-fruitPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
+            drawFruitPoints=false;
+        }
+
+        if(drawGhostPoints && System.currentTimeMillis()-ghostPointsPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
+            drawGhostPoints=false;
+        }
+
+        if(drawOneUp && System.currentTimeMillis()-oneUpPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
+            drawOneUp=false;
+        }
+
+        if(fruitVisible && System.currentTimeMillis()-fruitTimeStamp>=TimeUtils.FRUIT_VISIBLE_TIME){
+            fruitVisible=false;
+        }
+    }
+    private void checkEntityDelays() {
+        if(System.currentTimeMillis()-pacmanLastProcessed>=TimeUtils.PACMAN_DELAY(level,false)){
+            pacman.update();
+            pacmanMove();
+            pacmanLastProcessed=System.currentTimeMillis();
+        }
+
+        for(int i=0; i<ghostLastProcessed.length;i++){
+            if(System.currentTimeMillis()-ghostLastProcessed[i]>=TimeUtils.GHOST_DELAY(level,ghost[i].mode,ghost[i].inTunnel)){
+                ghost[i].update();
+                ghostMove(ghost[i]);
+                ghostLastProcessed[i]=System.currentTimeMillis();
+            }
+        }
+
     }
 
     private void checkStatus() {
@@ -286,76 +318,64 @@ public class Game extends JPanel{
             fruitUsed=true;
             fruitTimeStamp=System.currentTimeMillis();
         }
-
-        if(fruitVisible && System.currentTimeMillis()-fruitTimeStamp>=TimeUtils.FRUIT_VISIBLE_TIME){
-            fruitVisible=false;
-        }
     }
 
-    private void checkEntityDelays() {
-        if(System.currentTimeMillis()-pacmanLastProcessed>=TimeUtils.PACMAN_DELAY(level,false)){
-            pacman.update();
-            confirmMove(pacman);
-            pacmanLastProcessed=System.currentTimeMillis();
-        }
-
-        for(int i=0; i<ghostLastProcessed.length;i++){
-            if(System.currentTimeMillis()-ghostLastProcessed[i]>=TimeUtils.GHOST_DELAY(level,ghost[i].mode,ghost[i].inTunnel)){
-                ghost[i].update();
-                confirmMove(ghost[i]);
-
-                ghostLastProcessed[i]=System.currentTimeMillis();
-            }
-        }
-
-    }
-
-    private void checkTimers() {
-        if(drawFruitPoints && System.currentTimeMillis()-fruitPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
-            drawFruitPoints=false;
-        }
-
-        if(drawGhostPoints && System.currentTimeMillis()-ghostPointsPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
-            drawGhostPoints=false;
-        }
-
-        if(drawOneUp && System.currentTimeMillis()-oneUpPaintStamp>=TimeUtils.POINTS_VISIBLE_TIME){
-            drawOneUp=false;
-        }
-    }
-
-    void confirmMove(Entity entity){
-        if(entity.canMove) {
-            if(inTunnel(entity)) {
-                if(entity.x_location<-Utils.CELL_LENGTH){
-                    entity.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH-10;
+    private void pacmanMove(){
+        if (pacman.canMove) {
+            if(inTunnel(pacman)) {
+                if(pacman.x_location<-Utils.CELL_LENGTH){
+                    pacman.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH-10;
                 }
-                else if(entity.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH){
-                    entity.x_location=-Utils.CELL_LENGTH+10;
+                else if(pacman.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH){
+                    pacman.x_location=-Utils.CELL_LENGTH+10;
                 }
             }
             else {
-                entity.inTunnel=false;
-                if (checkCollision(entity.new_x_direction, entity.new_y_direction, entity)) {  //Checks new direction
-                    entity.x_direction = entity.new_x_direction;
-                    entity.y_direction = entity.new_y_direction;
+                pacman.inTunnel=false;
 
-                    entity.rotate(entity.new_x_direction, entity.new_y_direction);
+                if (checkCollision(pacman.new_x_direction, pacman.new_y_direction, pacman)) {  //Checks new direction
+                    pacman.x_direction = pacman.new_x_direction;
+                    pacman.y_direction = pacman.new_y_direction;
+
+                    pacman.rotate(pacman.new_x_direction, pacman.new_y_direction);
                 }
-                else if (!checkCollision(entity.x_direction, entity.y_direction, entity)) {   //Checks old direction
-                    entity.last_x_direction = entity.x_direction;
-                    entity.last_y_direction = entity.y_direction;
-                    entity.x_direction = 0;
-                    entity.y_direction = 0;
+                else if (!checkCollision(pacman.x_direction, pacman.y_direction, pacman)) {   //Checks old direction
+                    pacman.last_x_direction = pacman.x_direction;
+                    pacman.last_y_direction = pacman.y_direction;
+                    pacman.x_direction = 0;
+                    pacman.y_direction = 0;
                 }
-                entity.speed = TimeUtils.SPEED;
+                pacman.speed = TimeUtils.SPEED;
             }
-        entity.x_location += entity.x_direction; //Moves entity in that direction
-        entity.y_location += entity.y_direction;
-
-        if(!entity.isPacman)
-            checkGhostCollision(entity);
+            pacman.x_location += pacman.x_direction;
+            pacman.y_location += pacman.y_direction;
         }
+    }
+
+    private void ghostMove(Ghost ghost){
+        if(ghost.canMove){
+            if(inTunnel(ghost)) {
+                if(ghost.x_location<-Utils.CELL_LENGTH){
+                    ghost.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH-10;
+                }
+                else if(ghost.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH){
+                    ghost.x_location=-Utils.CELL_LENGTH+10;
+                }
+            }
+            else{
+                ghost.inTunnel=false;
+
+
+            }
+        }
+        if (!checkCollision(ghost.x_direction,ghost.y_direction, ghost)) {   //Checks old direction
+            ghost.hitWall();
+        }
+
+        ghost.x_location += ghost.x_direction; //Moves entity in that direction
+        ghost.y_location += ghost.y_direction;
+
+        checkGhostCollision(ghost);
     }
 
     private boolean inTunnel(Entity entity) {
@@ -382,7 +402,7 @@ public class Game extends JPanel{
         return false;
     }
 
-    boolean checkCollision(int x_dir, int y_dir, Entity entity) {
+    public boolean checkCollision(int x_dir, int y_dir, Entity entity) {
         int [] wallCollisions= new int[4];
 
         wallCollisions[0]=map[((entity.y_location+y_dir)/ Utils.CELL_LENGTH)][((entity.x_location+x_dir)/ Utils.CELL_LENGTH)]; //top left
@@ -515,29 +535,29 @@ public class Game extends JPanel{
         return true;
     }
 
-    private void checkGhostCollision(Entity entity){
+    private void checkGhostCollision(Ghost ghost){
         int pacman_x= pacman.x_location;
         int pacman_y=pacman.y_location;
 
-        int current_x=entity.x_location;
-        int current_y=entity.y_location;
+        int current_x=ghost.x_location;
+        int current_y=ghost.y_location;
 
         if(current_x<=pacman_x+5 && current_x>=pacman_x-5 && current_y<=pacman_y+5 && current_y>=pacman_y-5){
-            if(!entity.isFrightened && !entity.isDead)
+            if(!ghost.isFrightened && !ghost.isDead)
                 lostLife();
-            else if(entity.isFrightened)
-                ghostKilled(entity);
+            else if(ghost.isFrightened)
+                ghostKilled(ghost);
         }
 
     }
 
-    private void ghostKilled(Entity entity) {
-        entity.dies();
+    private void ghostKilled(Ghost ghost) {
+        ghost.dies();
 
         drawGhostPoints=true;
         ghostPointsPaintStamp=System.currentTimeMillis();
-        ghostBonus_x=entity.x_location;
-        ghostBonus_y=entity.y_location;
+        ghostBonus_x=ghost.x_location;
+        ghostBonus_y=ghost.y_location;
 
         switch (ghostsEaten) {
             case 0 -> {
@@ -585,12 +605,13 @@ public class Game extends JPanel{
     }
 
     private void energizerEaten(){
-        ghostsEaten=0;
-        score+=50;
-        foodCount--;
         for(Ghost g:ghost){
             g.makeFrightened();
         }
+
+        ghostsEaten=0;
+        score+=50;
+        foodCount--;
     }
 
     private void fruitEaten(){
@@ -619,24 +640,4 @@ public class Game extends JPanel{
         }
     }
 
-    public boolean isAtIntersection(int x, int y){
-        int numRoutes=0;
-
-        if(map[x][y]==0 || map[x][y]==2){
-            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2)){
-                numRoutes++;
-            }
-            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2)){
-                numRoutes++;
-            }
-            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2)){
-                numRoutes++;
-            }
-            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2)){
-                numRoutes++;
-            }
-        }
-
-        return numRoutes > 2;
-    }
 }

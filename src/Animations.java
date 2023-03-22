@@ -23,6 +23,7 @@ public final class Animations implements ActionListener {
         this.game=game;
         timer= new Timer(1,this);
         timer.start();
+
         gameOver=false;
         lostLife=false;
         begOfLevel=false;
@@ -32,6 +33,45 @@ public final class Animations implements ActionListener {
 
     public void start(){
         timer.restart();
+    }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        game.actionPerformed();
+
+        if(lostLife&& !game.pacman.deathAnimation){
+            lostLife=false;
+            pauseTime=1000;
+            pause();
+        }
+
+        if(finishedLevel && System.currentTimeMillis()-finishedLevelTimeStamp>=TimeUtils.LEVELEND_ANIMATION){
+            finishedLevel=false;
+            newLevel();
+        }
+
+        if(begOfLevel && System.currentTimeMillis()-begOfLeveLTimeStamp>=TimeUtils.READY_ANIMATION){
+            for (Ghost g : game.ghost) {
+                g.canMove=true;
+            }
+
+            game.pacman.canMove= true;
+            begOfLevel=false;
+            game.drawReady=false;
+        }
+
+        if(gameOver && !lostLife && System.currentTimeMillis()-gameOverTimeStamp>=TimeUtils.GAMEOVER_ANIMATION){
+            gameOver=false;
+            game.parent.returnToMenu(game.score);
+            timer.stop();
+        }
+
+        if(pause && System.currentTimeMillis()-pauseStamp>=pauseTime){
+            pause=false;
+            if(game.lives==0)
+                gameOver();
+            else
+                revive();
+        }
     }
 
     public void lostLife(){
@@ -44,7 +84,6 @@ public final class Animations implements ActionListener {
     }
 
     public void finishedLevel(){
-
         game.pacman.canMove=false;
         for(Ghost g:game.ghost){
             g.makeInvisible();
@@ -90,46 +129,6 @@ public final class Animations implements ActionListener {
 
         gameOver=true;
         gameOverTimeStamp=System.currentTimeMillis();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        game.actionPerformed();
-
-        if(lostLife&& !game.pacman.deathAnimation){
-            lostLife=false;
-            pauseTime=1000;
-            pause();
-        }
-
-        if(finishedLevel && System.currentTimeMillis()-finishedLevelTimeStamp>=TimeUtils.LEVELEND_ANIMATION){
-            finishedLevel=false;
-            newLevel();
-        }
-
-        if(begOfLevel && System.currentTimeMillis()-begOfLeveLTimeStamp>=TimeUtils.READY_ANIMATION){
-            for (Ghost g : game.ghost) {
-                g.canMove=true;
-            }
-
-            game.pacman.canMove= true;
-            begOfLevel=false;
-            game.drawReady=false;
-        }
-
-        if(gameOver && !lostLife && System.currentTimeMillis()-gameOverTimeStamp>=TimeUtils.GAMEOVER_ANIMATION){
-            gameOver=false;
-            game.parent.returnToMenu(game.score);
-            timer.stop();
-        }
-
-        if(pause && System.currentTimeMillis()-pauseStamp>=pauseTime){
-            pause=false;
-            if(game.lives==0)
-                gameOver();
-            else
-                revive();
-        }
     }
 
     private void pause() {

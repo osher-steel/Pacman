@@ -4,44 +4,44 @@ import java.util.Random;
 import static java.lang.Math.abs;
 
 public class Ghost extends Entity {
-    Random rand=new Random();
+    private Random rand=new Random();
 
-    int id;
-    int mode;
-    int lastMode;
-    Game map;
-    Image [] spriteList;
-    Image sprite;
+    private int id;
+    public int mode;
+    private int lastMode;
+    private Game game;
+    private Image [] spriteList;
+    private Image sprite;
 
-    int modeCounter;
+    private int modeCounter;
 
-    int lastMapValue;
+    private int lastMapValue;
 
 
-    int []target_location= new int[2];
-    int []current_location= new int[2];
-    int []corner_location= new int[2];
-    long lastProcessed;
+    private int []target_location= new int[2];
+    private int []current_location= new int[2];
+    private int []corner_location= new int[2];
+    private long lastProcessed;
 
-    long frightenedStamp;
-    long flashingStamp;
-    long inHouseStamp;
+    private long frightenedStamp;
+    private long flashingStamp;
+    private long inHouseStamp;
 
-    int timeToWaitInHouse;
+    private int timeToWaitInHouse;
 
-    boolean begOfLevel;
-    boolean flashing;
-    boolean choseRandom;
-    boolean justStarted;
+    private boolean begOfLevel;
+    private boolean flashing;
+    private boolean choseRandom;
+    private boolean justStarted;
 
 //    Ghosts are forced to reverse direction by the system anytime the mode changes from: chase-to-scatter,
 //    chase-to-frightened, scatter-to-chase, and scatter-to-frightened.
 //    Ghosts do not reverse direction when changing back from frightened to chase or scatter modes.
 
 
-    Ghost(int id, Game map){
+    Ghost(int id, Game game){
         inTunnel=false;
-        this.map=map;
+        this.game=game;
         this.id=id;
 
         spriteList= new Image[4];
@@ -55,8 +55,6 @@ public class Ghost extends Entity {
 
         x_direction=0;
         y_direction=0;
-        new_x_direction=0;
-        new_y_direction=0;
 
         isPacman=false;
 
@@ -83,6 +81,7 @@ public class Ghost extends Entity {
     private void initVars() {
         if(id==0 || id==1)
             begOfLevel=false;
+
         isFrightened=false;
         canGoThroughDoor=false;
         isVisible=true;
@@ -91,11 +90,10 @@ public class Ghost extends Entity {
         flashing=false;
         choseRandom=false;
         sprite=spriteList[3];
-
         justStarted=true;
     }
 
-    public void initLocation(){
+    private void initLocation(){
         switch (id) {
             case 0 -> {
                 x_location = 10 * Utils.CELL_LENGTH;
@@ -138,14 +136,18 @@ public class Ghost extends Entity {
         modeCounter=1;
         lastMode=Utils.SCATTER_MODE;
 
-        if(id!=0){
+        if(id==0)
+            mode=Utils.SCATTER_MODE;
+        else{
             mode=Utils.LEAVEHOUSE_MODE;
 
-            canGoThroughDoor=(id==1);
+            if(id==1)
+                canGoThroughDoor=true;
 
             if(!begOfLevel){
                 timeToWaitInHouse=3000;
             }
+
             else{
                 if(id==2)
                     timeToWaitInHouse=TimeUtils.INHOUSE_TIME1;
@@ -153,13 +155,11 @@ public class Ghost extends Entity {
                     timeToWaitInHouse=TimeUtils.INHOUSE_TIME2;
             }
         }
-        else
-            mode=Utils.SCATTER_MODE;
 
         writeMode();
     }
 
-    void update(){
+    public void update(){
         current_location[0]= (x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
         current_location[1]=(y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
 
@@ -197,7 +197,7 @@ public class Ghost extends Entity {
     private void updateNormalMode(){
         int count=modeCounter;
         //Goes from Chase to Scatter depending on the time elapsed and the level
-        if(map.level==1){
+        if(game.level==1){
             if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
                 modeCounter++;
             }
@@ -210,7 +210,7 @@ public class Ghost extends Entity {
                 lastProcessed=System.currentTimeMillis();
             }
         }
-        else if(map.level==2||map.level==3||map.level==4){
+        else if(game.level==2||game.level==3||game.level==4){
             if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
                 modeCounter++;
                 lastProcessed=System.currentTimeMillis();
@@ -272,7 +272,7 @@ public class Ghost extends Entity {
         }
         else{
             if(begOfLevel){
-                if((id==2 && map.foodCount<=Utils.NUM_FOOD-TimeUtils.INHOUSE_FOODCOUNT1) || (id==3 && map.foodCount<=Utils.NUM_FOOD-TimeUtils.INHOUSE_FOODCOUNT2))
+                if((id==2 && game.foodCount<=Utils.NUM_FOOD-TimeUtils.INHOUSE_FOODCOUNT1) || (id==3 && game.foodCount<=Utils.NUM_FOOD-TimeUtils.INHOUSE_FOODCOUNT2))
                     canGoThroughDoor=true;
                 else if(id==2 && System.currentTimeMillis()-inHouseStamp>=timeToWaitInHouse || id==3 && System.currentTimeMillis()-inHouseStamp>=timeToWaitInHouse){
                     canGoThroughDoor=true;
@@ -325,24 +325,22 @@ public class Ghost extends Entity {
 //            map.map[target_location[0]][target_location[1]]=lastMapValue;
         }
 
-        switch(mode){
-            case Utils.LEAVEHOUSE_MODE:
-                if(canGoThroughDoor){
-                    target_location[0]=10;
-                    target_location[1]=7;
-                }
-                else{
-                    if(current_location[0]==9){
-                        target_location[0]=13;
-                        target_location[1]=9;
-                    }
-                    else if(current_location[0]==11){
-                        target_location[0]=7;
-                        target_location[1]=9;
+        switch (mode) {
+            case Utils.LEAVEHOUSE_MODE -> {
+                if (canGoThroughDoor) {
+                    target_location[0] = 10;
+                    target_location[1] = 7;
+                } else {
+                    if (current_location[0] == 9) {
+                        target_location[0] = 13;
+                        target_location[1] = 9;
+                    } else if (current_location[0] == 11) {
+                        target_location[0] = 7;
+                        target_location[1] = 9;
                     }
                 }
-                break;
-            case Utils.CHASE_MODE:{
+            }
+            case Utils.CHASE_MODE -> {
                 switch (id) {
                     case 0 -> {
                         makePacmanTarget();
@@ -357,31 +355,27 @@ public class Ghost extends Entity {
                         orangeTarget();
                     }
                 }
-                break;
             }
-            case Utils.SCATTER_MODE:{
-                target_location[0]= corner_location[0];
-                target_location[1]= corner_location[1];
-                break;
+            case Utils.SCATTER_MODE -> {
+                target_location[0] = corner_location[0];
+                target_location[1] = corner_location[1];
             }
-            case Utils.FRIGHTENED_MODE:{
-                if(!choseRandom){
+            case Utils.FRIGHTENED_MODE -> {
+                if (!choseRandom) {
                     randomTarget();
-                    choseRandom=true;
+                    choseRandom = true;
+                } else {
+                    if (current_location[0] == target_location[0] && current_location[1] == target_location[1])
+                        choseRandom = false;
                 }
-                else{
-                    if(current_location[0]==target_location[0] && current_location[1]==target_location[1])
-                        choseRandom=false;
-                }
-                break;
             }
-            case Utils.DIED_MODE:{
-                    target_location[0]=9;
-                    target_location[1]=9;
+            case Utils.DIED_MODE -> {
+                target_location[0] = 9;
+                target_location[1] = 9;
             }
         }
         if(target_location[0]>=0 && target_location[0]<=20 && target_location[1]>=0 && target_location[1]<=20){
-            lastMapValue=map.map[target_location[0]][target_location[1]];
+            lastMapValue=game.map[target_location[0]][target_location[1]];
 
 //            if(id!=0)
 //                map.map[target_location[0]][target_location[1]]=(id*5);
@@ -391,22 +385,22 @@ public class Ghost extends Entity {
     }
 
     private void makePacmanTarget(){
-        target_location[0]= (map.pacman.x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
-        target_location[1]=(map.pacman.y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
+        target_location[0]= (game.pacman.x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
+        target_location[1]=(game.pacman.y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
     }
 
     private void targetAheadOfPacman(int distance) {
         makePacmanTarget();
-        if(map.pacman.x_direction==map.pacman.speed ||map.pacman.last_x_direction==map.pacman.speed){
+        if(game.pacman.x_direction==game.pacman.speed ||game.pacman.last_x_direction==game.pacman.speed){
             target_location[0]+=distance;
         }
-        else if(map.pacman.x_direction==-map.pacman.speed||map.pacman.last_x_direction==-map.pacman.speed){
+        else if(game.pacman.x_direction==-game.pacman.speed||game.pacman.last_x_direction==-game.pacman.speed){
             target_location[0]-=distance;
         }
-        else if(map.pacman.y_direction==map.pacman.speed||map.pacman.last_y_direction==map.pacman.speed){
+        else if(game.pacman.y_direction==game.pacman.speed||game.pacman.last_y_direction==game.pacman.speed){
             target_location[1]+=distance;
         }
-        else if(map.pacman.y_direction==-map.pacman.speed||map.pacman.last_y_direction==-map.pacman.speed){
+        else if(game.pacman.y_direction==-game.pacman.speed||game.pacman.last_y_direction==-game.pacman.speed){
             target_location[1]-=distance;
         }
 
@@ -414,8 +408,8 @@ public class Ghost extends Entity {
 
     private void blueTarget() {
         targetAheadOfPacman(2);
-        int red_x=(map.ghost[0].x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
-        int red_y=(map.ghost[0].y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
+        int red_x=(game.ghost[0].x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
+        int red_y=(game.ghost[0].y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
         int x_diff=target_location[0]-red_x;
         int y_diff=target_location[1]-red_y;
 
@@ -439,6 +433,7 @@ public class Ghost extends Entity {
             target_location[1]=rand.nextInt(Utils.NUM_ROWS);
     }
 
+    //Fix
     private void chooseDirection(){
         int x_diff=current_location[0]-target_location[0];
         int y_diff=current_location[1]-target_location[1];
@@ -463,118 +458,105 @@ public class Ghost extends Entity {
         if(x_direction==0 && y_direction==0){
             boolean canMoveBackwards=(mode==Utils.LEAVEHOUSE_MODE);
 
-            if(map.checkCollision(0,ideal_vertical_direction,this)
+            if(game.checkCollision(0,ideal_vertical_direction,this)
                     && (last_y_direction!=-ideal_vertical_direction||canMoveBackwards) && ideal_vertical_direction!=0){
-                new_x_direction=0;
-                new_y_direction=ideal_vertical_direction;
-            }else if(map.checkCollision(ideal_horizontal_direction,0,this)
+               //DO
+            }else if(game.checkCollision(ideal_horizontal_direction,0,this)
                     &&( last_x_direction!=-ideal_horizontal_direction||canMoveBackwards)&& ideal_horizontal_direction!=0){
-                new_x_direction=ideal_horizontal_direction;
-                new_y_direction=0;
+                //Do
             }
-            else if(map.checkCollision(0,-ideal_vertical_direction,this)
+            else if(game.checkCollision(0,-ideal_vertical_direction,this)
                     &&( last_y_direction!=ideal_vertical_direction||canMoveBackwards) && ideal_vertical_direction!=0){
-                new_x_direction=0;
-                new_y_direction=-ideal_vertical_direction;
-            }else if(map.checkCollision(-ideal_horizontal_direction,0,this)
+
+            }else if(game.checkCollision(-ideal_horizontal_direction,0,this)
                     && (canMoveBackwards||last_x_direction!=ideal_horizontal_direction) && ideal_horizontal_direction!=0){
-                new_x_direction=-ideal_horizontal_direction;
-                new_y_direction=0;
+
             }
             else{
                 if(ideal_vertical_direction==0){
-                    if(map.checkCollision(0,-speed,this)){
-                        new_x_direction=0;
-                        new_y_direction=-speed;
+                    if(game.checkCollision(0,-speed,this)){
+
                     }
-                    else if(map.checkCollision(0,speed,this)){
-                        new_x_direction=0;
-                        new_y_direction=speed;
+                    else if(game.checkCollision(0,speed,this)){
+
                     }
                 }
                 else if(ideal_horizontal_direction==0){
-                    if(map.checkCollision(-speed,0,this)){
-                        new_y_direction=0;
-                        new_x_direction=-speed;
+                    if(game.checkCollision(-speed,0,this)){
+
                     }
-                    else if(map.checkCollision(speed,0,this)){
-                        new_y_direction=0;
-                        new_x_direction=speed;
+                    else if(game.checkCollision(speed,0,this)){
+
                     }
                 }
             }
         }
         else if(y_diff==0){
             if(x_direction==0){
-                new_x_direction=ideal_horizontal_direction;
-                new_y_direction=0;
+
             }
             else if(y_direction==0){
                 if(x_direction==-ideal_horizontal_direction){
-                    if(map.checkCollision(0,-speed,this)){
-                        new_y_direction=-speed;
-                        new_x_direction=0;
+                    if(game.checkCollision(0,-speed,this)){
+
                     }
-                    else if(map.checkCollision(0,speed,this)){
-                        new_y_direction=speed;
-                        new_x_direction=0;
+                    else if(game.checkCollision(0,speed,this)){
+
                     }
                 }
             }
         }
         else if(x_diff==0){
             if(y_direction==0){
-                new_y_direction=ideal_vertical_direction;
-                new_x_direction=0;
+
             }
             else if(x_direction==0){
                 if(y_direction==-ideal_vertical_direction){
-                    if(map.checkCollision(-speed,0,this)){
-                        new_x_direction=-speed;
-                        new_y_direction=0;
+                    if(game.checkCollision(-speed,0,this)){
+
                     }
-                    else if(map.checkCollision(speed,0,this)){
-                        new_x_direction=speed;
-                        new_y_direction=0;
+                    else if(game.checkCollision(speed,0,this)){
+
                     }
                 }
             }
         }
         else{
             if(x_direction!=0){
-                new_y_direction=ideal_vertical_direction;
-                new_x_direction=0;
+
             }
             else{
-                new_x_direction=ideal_horizontal_direction;
-                new_y_direction=0;
+
             }
         }
     }
 
     @Override
     public void dies() {
-        flashing=false;
         mode=Utils.DIED_MODE;
-        isFrightened=false;
-        isDead=true;
-        sprite=Utils.DEAD_IMG[0];
         canGoThroughDoor=true;
+        isDead=true;
+
+        sprite=Utils.DEAD_IMG[0];
         timeToWaitInHouse=1500;
+
+        flashing=false;
+        isFrightened=false;
 
         writeMode();
     }
 
     public void makeFrightened(){
+        //Cannot make frightened if ghost is in the house or is dead
         if(mode!=Utils.LEAVEHOUSE_MODE && mode !=Utils.DIED_MODE){
-            flashing=false;
             if(mode!=Utils.FRIGHTENED_MODE){
                 lastMode=mode;
             }
-
             mode=Utils.FRIGHTENED_MODE;
             sprite=Utils.FRIGHTENED_IMG[0];
+
             isFrightened=true;
+            flashing=false;
             frightenedStamp=System.currentTimeMillis();
         }
 
@@ -623,5 +605,9 @@ public class Ghost extends Entity {
 
 
        // System.out.println(color +" "+ modeType);
+    }
+
+    public void hitWall(){
+
     }
 }

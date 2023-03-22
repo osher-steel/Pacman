@@ -2,9 +2,9 @@ import java.awt.*;
 
 public abstract class Entity {
     public boolean inTunnel;
+
     public int x_location, y_location;
     public int x_direction, y_direction;
-    public int new_x_direction, new_y_direction;
     public int last_x_direction, last_y_direction;
 
     public int direction;
