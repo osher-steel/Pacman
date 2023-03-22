@@ -58,7 +58,7 @@ public class TimeUtils {
             }
             else {
                 if (level == 1) {
-                    return 17;
+                    return 40;
                 } else if (level <= 4) {
                     return 14;
                 } else if (level <= 21) {

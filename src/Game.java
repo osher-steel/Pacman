@@ -52,7 +52,7 @@ public class Game extends JPanel{
         createIntersectionMap();
 
         pacman=new Pacman();
-        ghost= new Ghost[0];
+        ghost= new Ghost[1];
         for(int i=0; i<ghost.length;i++){
             ghost[i]= new Ghost(i,this);
         }
@@ -102,28 +102,45 @@ public class Game extends JPanel{
 
 
     }
-    private boolean isAtIntersection(int x, int y){
+    public boolean isAtIntersection(int y, int x){
         int numRoutes=0;
 
-        if(map[x][y]==0 || map[x][y]==2){
-            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2)){
+        if(map[x][y]==0 || map[x][y]==2|| map[x][y]==3){
+            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2|| map[x+1][y]==3)){
                 numRoutes++;
             }
-            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2)){
+            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2 ||  map[x-1][y]==3)){
                 numRoutes++;
             }
-            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2)){
+            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2|| map[x][y+1]==3)){
                 numRoutes++;
             }
-            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2)){
+            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2|| map[x][y-1]==3)){
                 numRoutes++;
             }
         }
 
-        return numRoutes > 2;
+        return numRoutes>2;
     }
-    public void start(){
-        animations.start();
+    public boolean[] availableRoutes(int x, int y,int direction){
+        boolean [] routes= new boolean[4];
+        for(boolean r:routes)
+            r=false;
+
+        if(x!=map.length-1 && (map[y][x+1]==0 || map[y][x+1]==2) && direction!=3){
+           routes[1]=true;
+        }
+        if(x!=0 &&(map[y][x-1]==0 || map[y][x-1]==2) && direction!=1){
+            routes[3]=true;
+        }
+        if(y!=map.length-1 &&(map[y+1][x]==0 || map[y+1][x]==2 ) && direction!=0){
+            routes[2]=true;
+        }
+        if(y!=0 &&(map[y-1][x]==0 || map[y-1][x]==2) && direction!=2){
+            routes[0]=true;
+        }
+
+        return routes;
     }
     @Override
     public void paintComponent(Graphics g){
@@ -168,7 +185,7 @@ public class Game extends JPanel{
                             g.drawImage(fruit.getSprite(), j*Utils.CELL_LENGTH, i*Utils.CELL_LENGTH,this);
                         }
                     }
-//                    case Utils.RED->{
+//                    case 8->{
 //                        g.setColor(Color.RED);
 //                        g.fillRect(j * Utils.CELL_LENGTH,
 //                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
@@ -188,6 +205,15 @@ public class Game extends JPanel{
 //                        g.fillRect(j * Utils.CELL_LENGTH,
 //                                i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
 //                    }
+                }
+            }
+        }
+        for(int i=0; i<intersection_map.length; i++){
+            for(int j=0; j<intersection_map[i].length;j++){
+                if(intersection_map[j][i]==1){
+                    g.setColor(Color.GREEN);
+                    g.fillRect(j * Utils.CELL_LENGTH,
+                            i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
                 }
             }
         }
@@ -242,15 +268,8 @@ public class Game extends JPanel{
             g.drawString("READY !",Utils.CELL_LENGTH*9+10,Utils.CELL_LENGTH*12-3);
         }
 
-        for(int i=0; i<intersection_map.length; i++){
-            for(int j=0; j<intersection_map[i].length;j++){
-                if(intersection_map[i][j]==1){
-                    g.setColor(Color.GREEN);
-                    g.fillRect(j * Utils.CELL_LENGTH,
-                            i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                }
-            }
-        }
+        g.setColor(Color.RED);
+        g.fillRect(ghost[0].target_location[0] * Utils.CELL_LENGTH, ghost[0].target_location[1] * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
     }
 
     public void actionPerformed() {
@@ -281,14 +300,12 @@ public class Game extends JPanel{
     }
     private void checkEntityDelays() {
         if(System.currentTimeMillis()-pacmanLastProcessed>=TimeUtils.PACMAN_DELAY(level,false)){
-            pacman.update();
             pacmanMove();
             pacmanLastProcessed=System.currentTimeMillis();
         }
 
         for(int i=0; i<ghostLastProcessed.length;i++){
             if(System.currentTimeMillis()-ghostLastProcessed[i]>=TimeUtils.GHOST_DELAY(level,ghost[i].mode,ghost[i].inTunnel)){
-                ghost[i].update();
                 ghostMove(ghost[i]);
                 ghostLastProcessed[i]=System.currentTimeMillis();
             }
@@ -321,6 +338,8 @@ public class Game extends JPanel{
     }
 
     private void pacmanMove(){
+        pacman.update();
+
         if (pacman.canMove) {
             if(inTunnel(pacman)) {
                 if(pacman.x_location<-Utils.CELL_LENGTH){
@@ -364,18 +383,19 @@ public class Game extends JPanel{
             }
             else{
                 ghost.inTunnel=false;
-
-
             }
-        }
-        if (!checkCollision(ghost.x_direction,ghost.y_direction, ghost)) {   //Checks old direction
-            ghost.hitWall();
-        }
 
-        ghost.x_location += ghost.x_direction; //Moves entity in that direction
-        ghost.y_location += ghost.y_direction;
+            ghost.update();
 
-        checkGhostCollision(ghost);
+            if (!checkCollision(ghost.x_direction,ghost.y_direction, ghost)) {   //Checks old direction
+                ghost.hitWall();
+            }
+
+            ghost.x_location += ghost.x_direction; //Moves entity in that direction
+            ghost.y_location += ghost.y_direction;
+
+            checkGhostCollision(ghost);
+        }
     }
 
     private boolean inTunnel(Entity entity) {

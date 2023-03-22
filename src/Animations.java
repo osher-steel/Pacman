@@ -31,9 +31,6 @@ public final class Animations implements ActionListener {
         pause=false;
     }
 
-    public void start(){
-        timer.restart();
-    }
     @Override
     public void actionPerformed(ActionEvent e) {
         game.actionPerformed();

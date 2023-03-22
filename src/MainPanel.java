@@ -36,9 +36,7 @@ public class MainPanel extends JPanel  implements MouseListener, KeyListener{
         inGame=false;
 
         menu= new Menu(this);
-        game=new Game(this,highscore);
         add(menu,"menu");
-        add(game,"game");
 
         cardLayout.show(this,"menu");
 
@@ -49,7 +47,8 @@ public class MainPanel extends JPanel  implements MouseListener, KeyListener{
 
     public void startGame(){
         inGame=true;
-        game.start();
+        game= new Game(this,highscore);
+        add(game,"game");
         cardLayout.show(this,"game");
     }
 

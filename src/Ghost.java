@@ -15,13 +15,14 @@ public class Ghost extends Entity {
 
     private int modeCounter;
 
-    private int lastMapValue;
 
 
-    private int []target_location= new int[2];
+    public int []target_location= new int[2];
     private int []current_location= new int[2];
     private int []corner_location= new int[2];
     private long lastProcessed;
+
+    private long lastPro;
 
     private long frightenedStamp;
     private long flashingStamp;
@@ -53,7 +54,7 @@ public class Ghost extends Entity {
         direction=1;
         last_direction=direction;
 
-        x_direction=0;
+        x_direction=speed;
         y_direction=0;
 
         isPacman=false;
@@ -61,6 +62,7 @@ public class Ghost extends Entity {
         loadSprites();
         init(true);
 
+        lastPro=System.currentTimeMillis();
     }
 
     private void loadSprites() {
@@ -100,7 +102,7 @@ public class Ghost extends Entity {
                 y_location = 7 * Utils.CELL_LENGTH;
                 corner_location[0]=20;
                 corner_location[1]=0;
-                direction=0;
+                direction=1;
                 sprite=spriteList[1];
             }
             case 1 -> {
@@ -160,8 +162,8 @@ public class Ghost extends Entity {
     }
 
     public void update(){
-        current_location[0]= (x_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
-        current_location[1]=(y_location+(Utils.CELL_LENGTH/2))/Utils.CELL_LENGTH;
+        current_location[0]= x_location/Utils.CELL_LENGTH;
+        current_location[1]=y_location/Utils.CELL_LENGTH;
 
         if(canMove){
             if (flashing && System.currentTimeMillis()-flashingStamp>=TimeUtils.FLASHING_SPEED) {
@@ -179,9 +181,16 @@ public class Ghost extends Entity {
             }
 
             updateMode();
-            getTarget();
-            if(!inTunnel)
-                chooseDirection();
+            boolean x_accuracy=(x_location%Utils.CELL_LENGTH==0 || x_location%Utils.CELL_LENGTH==1);
+            boolean y_accuracy=(y_location%Utils.CELL_LENGTH==0 || y_location%Utils.CELL_LENGTH==1);
+
+            if(game.isAtIntersection(current_location[0],current_location[1]) && x_accuracy &&y_accuracy )
+            {
+                System.out.println("Intersection Cell:"+current_location[0]+","+current_location[1] );
+                System.out.println("Mode"+mode);
+                getTarget();
+                chooseDirection();;
+            }
         }
     }
 
@@ -195,70 +204,71 @@ public class Ghost extends Entity {
     }
 
     private void updateNormalMode(){
-        int count=modeCounter;
-        //Goes from Chase to Scatter depending on the time elapsed and the level
-        if(game.level==1){
-            if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
-                modeCounter++;
-            }
-            else if((modeCounter==5||modeCounter==7) && System.currentTimeMillis()-lastProcessed>=5000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if((modeCounter==2||modeCounter==4||modeCounter==6) && System.currentTimeMillis()-lastProcessed>=20000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-        }
-        else if(game.level==2||game.level==3||game.level==4){
-            if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if(modeCounter==5 && System.currentTimeMillis()-lastProcessed>=5000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if(modeCounter==7 && System.currentTimeMillis()-lastProcessed>=16){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if((modeCounter==2||modeCounter==4) && System.currentTimeMillis()-lastProcessed>=20000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if(modeCounter==6 && System.currentTimeMillis()-lastProcessed>=1033000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-        }
-        else{
-            if((modeCounter==1||modeCounter==3||modeCounter==5) && System.currentTimeMillis()-lastProcessed>=5000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if(modeCounter==7 && System.currentTimeMillis()-lastProcessed>=16){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if((modeCounter==2||modeCounter==4) && System.currentTimeMillis()-lastProcessed>=20000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-            else if(modeCounter==6 && System.currentTimeMillis()-lastProcessed>=1037000){
-                modeCounter++;
-                lastProcessed=System.currentTimeMillis();
-            }
-        }
-
-
-        switch (modeCounter) {
-            case 1, 3, 5, 7 -> mode = Utils.SCATTER_MODE;
-            case 2, 4, 6, 8 -> mode = Utils.CHASE_MODE;
-        }
-
-        if(modeCounter>count)
-            writeMode();
+//        int count=modeCounter;
+//        //Goes from Chase to Scatter depending on the time elapsed and the level
+//        if(game.level==1){
+//            if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
+//                modeCounter++;
+//            }
+//            else if((modeCounter==5||modeCounter==7) && System.currentTimeMillis()-lastProcessed>=5000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if((modeCounter==2||modeCounter==4||modeCounter==6) && System.currentTimeMillis()-lastProcessed>=20000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//        }
+//        else if(game.level==2||game.level==3||game.level==4){
+//            if((modeCounter==1||modeCounter==3) && System.currentTimeMillis()-lastProcessed>=7000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if(modeCounter==5 && System.currentTimeMillis()-lastProcessed>=5000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if(modeCounter==7 && System.currentTimeMillis()-lastProcessed>=16){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if((modeCounter==2||modeCounter==4) && System.currentTimeMillis()-lastProcessed>=20000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if(modeCounter==6 && System.currentTimeMillis()-lastProcessed>=1033000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//        }
+//        else{
+//            if((modeCounter==1||modeCounter==3||modeCounter==5) && System.currentTimeMillis()-lastProcessed>=5000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if(modeCounter==7 && System.currentTimeMillis()-lastProcessed>=16){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if((modeCounter==2||modeCounter==4) && System.currentTimeMillis()-lastProcessed>=20000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//            else if(modeCounter==6 && System.currentTimeMillis()-lastProcessed>=1037000){
+//                modeCounter++;
+//                lastProcessed=System.currentTimeMillis();
+//            }
+//        }
+//
+//
+//        switch (modeCounter) {
+//            case 1, 3, 5, 7 -> mode = Utils.SCATTER_MODE;
+//            case 2, 4, 6, 8 -> mode = Utils.CHASE_MODE;
+//        }
+//
+//        if(modeCounter>count)
+//            writeMode();
+        mode=Utils.CHASE_MODE;
     }
 
     private void updateLeaveHouseMode() {
@@ -319,12 +329,6 @@ public class Ghost extends Entity {
     }
 
     private void getTarget(){
-        if(justStarted)
-            justStarted=false;
-        else if(target_location[0]>=0 && target_location[0]<=20 && target_location[1]>=0 && target_location[1]<=20){
-//            map.map[target_location[0]][target_location[1]]=lastMapValue;
-        }
-
         switch (mode) {
             case Utils.LEAVEHOUSE_MODE -> {
                 if (canGoThroughDoor) {
@@ -374,14 +378,7 @@ public class Ghost extends Entity {
                 target_location[1] = 9;
             }
         }
-        if(target_location[0]>=0 && target_location[0]<=20 && target_location[1]>=0 && target_location[1]<=20){
-            lastMapValue=game.map[target_location[0]][target_location[1]];
 
-//            if(id!=0)
-//                map.map[target_location[0]][target_location[1]]=(id*5);
-//            else
-//                map.map[target_location[0]][target_location[1]]=Utils.RED;
-        }
     }
 
     private void makePacmanTarget(){
@@ -433,104 +430,82 @@ public class Ghost extends Entity {
             target_location[1]=rand.nextInt(Utils.NUM_ROWS);
     }
 
-    //Fix
     private void chooseDirection(){
         int x_diff=current_location[0]-target_location[0];
         int y_diff=current_location[1]-target_location[1];
-        int ideal_vertical_direction,ideal_horizontal_direction;
 
+        boolean x_diff_isHigher=(abs(x_diff)>abs((y_diff)));
+
+        int [] idealDirection= new int[4];
+        for(int i:idealDirection){
+            i=0;
+        }
 
         //Gets target vertical and horizontal direction
-        if(y_diff>0)
-            ideal_vertical_direction=-speed;
-        else if(y_diff<0)
-            ideal_vertical_direction=speed;
-        else
-            ideal_vertical_direction=0;
-
-        if(x_diff>0)
-            ideal_horizontal_direction=-speed;
-        else if(x_diff<0)
-            ideal_horizontal_direction=speed;
-        else
-            ideal_horizontal_direction=0;
-
-        if(x_direction==0 && y_direction==0){
-            boolean canMoveBackwards=(mode==Utils.LEAVEHOUSE_MODE);
-
-            if(game.checkCollision(0,ideal_vertical_direction,this)
-                    && (last_y_direction!=-ideal_vertical_direction||canMoveBackwards) && ideal_vertical_direction!=0){
-               //DO
-            }else if(game.checkCollision(ideal_horizontal_direction,0,this)
-                    &&( last_x_direction!=-ideal_horizontal_direction||canMoveBackwards)&& ideal_horizontal_direction!=0){
-                //Do
-            }
-            else if(game.checkCollision(0,-ideal_vertical_direction,this)
-                    &&( last_y_direction!=ideal_vertical_direction||canMoveBackwards) && ideal_vertical_direction!=0){
-
-            }else if(game.checkCollision(-ideal_horizontal_direction,0,this)
-                    && (canMoveBackwards||last_x_direction!=ideal_horizontal_direction) && ideal_horizontal_direction!=0){
-
+        if(y_diff>0){
+            if(x_diff_isHigher){
+                idealDirection[0]=1;
             }
             else{
-                if(ideal_vertical_direction==0){
-                    if(game.checkCollision(0,-speed,this)){
-
-                    }
-                    else if(game.checkCollision(0,speed,this)){
-
-                    }
-                }
-                else if(ideal_horizontal_direction==0){
-                    if(game.checkCollision(-speed,0,this)){
-
-                    }
-                    else if(game.checkCollision(speed,0,this)){
-
-                    }
-                }
+                idealDirection[0]=2;
             }
         }
-        else if(y_diff==0){
-            if(x_direction==0){
-
-            }
-            else if(y_direction==0){
-                if(x_direction==-ideal_horizontal_direction){
-                    if(game.checkCollision(0,-speed,this)){
-
-                    }
-                    else if(game.checkCollision(0,speed,this)){
-
-                    }
-                }
-            }
-        }
-        else if(x_diff==0){
-            if(y_direction==0){
-
-            }
-            else if(x_direction==0){
-                if(y_direction==-ideal_vertical_direction){
-                    if(game.checkCollision(-speed,0,this)){
-
-                    }
-                    else if(game.checkCollision(speed,0,this)){
-
-                    }
-                }
-            }
-        }
-        else{
-            if(x_direction!=0){
-
+        else if(y_diff<0){
+            if(x_diff_isHigher){
+                idealDirection[2]=1;
             }
             else{
-
+                idealDirection[2]=2;
             }
         }
+
+
+        if(x_diff>0){
+            if(x_diff_isHigher){
+                idealDirection[3]=2;
+            }
+            else{
+                idealDirection[3]=1;
+            }
+        }
+        else if(x_diff<0){
+            if(x_diff_isHigher){
+                idealDirection[1]=2;
+            }
+            else{
+                idealDirection[1]=1;
+            }
+        }
+
+        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction);
+
+        int newDirection=-1;
+
+        for(int i=0; i<4; i++){
+            if(routes[i] && idealDirection[i]==2){
+                newDirection=i;
+            }
+        }
+        if(newDirection==-1){
+            for(int i=0; i<4; i++){
+                if(routes[i] && idealDirection[i]==2){
+                    newDirection=i;
+                }
+            }
+        }
+        if(newDirection==-1){
+            int temp;
+            while(newDirection==-1){
+                temp=rand.nextInt(4);
+                if(routes[temp])
+                    newDirection=temp;
+            }
+        }
+
+        direction=newDirection;
+
+        directionConverter();
     }
-
     @Override
     public void dies() {
         mode=Utils.DIED_MODE;
@@ -608,6 +583,52 @@ public class Ghost extends Entity {
     }
 
     public void hitWall(){
+        int numRoutes=0;
+        int onlyRoute=-1;
 
+        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction);
+
+        for(int i=0; i<4; i++){
+            if(routes[i]){
+                onlyRoute=i;
+                numRoutes++;
+            }
+        }
+        if(numRoutes>1){
+            do {
+                direction = rand.nextInt(4);
+            } while (!routes[direction]);
+        }
+        else
+            direction=onlyRoute;
+
+        directionConverter();
+    }
+
+    private void directionConverter(){
+        switch(direction){
+            case 0:{
+                x_direction=0;
+                y_direction=-speed;
+                break;
+            }
+            case 1: {
+                x_direction=speed;
+                y_direction=0;
+                break;
+            }
+            case 2:
+            {
+                x_direction=0;
+                y_direction=speed;
+                break;
+            }
+            case 3:
+            {
+                x_direction=-speed;
+                y_direction=0;
+                break;
+            }
+        }
     }
 }
