@@ -3,6 +3,28 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 
 public class Game extends JPanel{
+    int [][]INTERSECTIONS_MAP={ {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
+    {0,1,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,1,0},
+    {0,1,2,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,2,1,0},
+    {0,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1,0},
+    {0,1,1,1,1,2,1,1,1,0,1,0,1,1,1,2,1,1,1,1,0},
+    {0,0,0,0,1,2,1,0,0,0,0,0,0,0,1,2,1,0,0,0,0},
+    {1,1,1,1,1,2,1,0,1,1,-1,1,1,0,1,2,1,1,1,1,1},
+    {0,0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,0,0},
+    {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
+    {0,0,0,0,1,2,1,0,0,0,4,0,0,0,1,2,1,0,0,0,0},
+    {0,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
+    {0,1,2,2,1,2,2,2,2,2,0,2,2,2,2,2,1,2,2,1,0},
+    {0,1,1,2,1,2,1,2,1,1,1,1,1,2,1,2,1,2,1,1,0},
+    {0,1,3,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,3,1,0},
+    {0,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,0},
+    {0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+    {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0}};
+
     MainPanel parent;
     Animations animations;
     Pacman pacman;
@@ -46,7 +68,9 @@ public class Game extends JPanel{
         this.parent=parent;
 
         map= new int[21][21];
+
         copyMap();
+        createIntersectionMap();
         setBackground(Color.BLACK);
 
 
@@ -81,6 +105,20 @@ public class Game extends JPanel{
         lastprocessed=System.currentTimeMillis();
     }
 
+    private void createIntersectionMap() {
+        for(int i=0; i<map.length;i++){
+            for(int j=0; j<map[i].length;j++){
+                if(isAtIntersection(i,j)){
+                    INTERSECTIONS_MAP[i][j]=1;
+                }
+                else
+                    INTERSECTIONS_MAP[i][j]=0;
+            }
+        }
+
+
+    }
+
     public void copyMap() {
         for(int i=0; i<map[0].length;i++){
             System.arraycopy(Utils.INITIAL_MAP[i], 0, map[i], 0, map.length);
@@ -98,11 +136,11 @@ public class Game extends JPanel{
         for(int i=0; i<map.length;i++){
             for(int j=0; j<map[0].length; j++){
                 switch (map[i][j]) {
-//                    case 0,2->{
-//                        g.setColor(Color.WHITE);
-//                        g.setFont(new Font(Font.SERIF, Font.PLAIN,10));
-//                        g.drawString(j+","+i,j*Utils.CELL_LENGTH,i*Utils.CELL_LENGTH+Utils.CELL_LENGTH);
-//                    }
+                    case 0,2->{
+                        g.setColor(Color.WHITE);
+                        g.setFont(new Font(Font.SERIF, Font.PLAIN,10));
+                        g.drawString(j+","+i,j*Utils.CELL_LENGTH,i*Utils.CELL_LENGTH+Utils.CELL_LENGTH);
+                    }
                     case -1 -> {
                         g.setColor(Color.gray);
                         g.fillRect(j * Utils.CELL_LENGTH,
@@ -113,14 +151,14 @@ public class Game extends JPanel{
                         g.fillRect(j * Utils.CELL_LENGTH,
                                 i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
                     }
-                    case 2 -> {
-                        if(!gameOver){
-                            g.setColor(Color.WHITE);
-                            g.fillOval(j * Utils.CELL_LENGTH + (Utils.CELL_LENGTH * 2 / 5),
-                                    i * Utils.CELL_LENGTH +(Utils.CELL_LENGTH * 2 / 5),
-                                    Utils.CELL_LENGTH / 5, Utils.CELL_LENGTH / 5);
-                        }
-                    }
+//                    case 2 -> {
+//                        if(!gameOver){
+//                            g.setColor(Color.WHITE);
+//                            g.fillOval(j * Utils.CELL_LENGTH + (Utils.CELL_LENGTH * 2 / 5),
+//                                    i * Utils.CELL_LENGTH +(Utils.CELL_LENGTH * 2 / 5),
+//                                    Utils.CELL_LENGTH / 5, Utils.CELL_LENGTH / 5);
+//                        }
+//                    }
                     case 3 -> {
                         if(!gameOver){
                             g.setColor(Color.WHITE);
@@ -205,6 +243,16 @@ public class Game extends JPanel{
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Impact",Font.BOLD,20));
             g.drawString("READY !",Utils.CELL_LENGTH*9+10,Utils.CELL_LENGTH*12-3);
+        }
+
+        for(int i=0; i<INTERSECTIONS_MAP.length; i++){
+            for(int j=0; j<INTERSECTIONS_MAP[i].length;j++){
+                if(INTERSECTIONS_MAP[i][j]==1){
+                    g.setColor(Color.GREEN);
+                    g.fillRect(j * Utils.CELL_LENGTH,
+                            i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+                }
+            }
         }
     }
 
@@ -571,4 +619,24 @@ public class Game extends JPanel{
         }
     }
 
+    public boolean isAtIntersection(int x, int y){
+        int numRoutes=0;
+
+        if(map[x][y]==0 || map[x][y]==2){
+            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2)){
+                numRoutes++;
+            }
+            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2)){
+                numRoutes++;
+            }
+            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2)){
+                numRoutes++;
+            }
+            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2)){
+                numRoutes++;
+            }
+        }
+
+        return numRoutes > 2;
+    }
 }
