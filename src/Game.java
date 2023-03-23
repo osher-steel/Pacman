@@ -10,7 +10,6 @@ public class Game extends JPanel{
     private Fruit fruit;
 
     public int [][]map;
-    private int [][]intersection_map;
 
     public int score;
     private int highscore;
@@ -35,7 +34,7 @@ public class Game extends JPanel{
 
     private long lastprocessed;
     private long pacmanLastProcessed;
-    private long []ghostLastProcessed;
+    private final long []ghostLastProcessed;
 
     private int ghostBonus_x,ghostBonus_y;
     private int oneUp_x,oneUp_y;
@@ -47,9 +46,7 @@ public class Game extends JPanel{
         this.parent=parent;
 
         map= new int[21][21];
-        intersection_map= new int[map.length][map[0].length];
         copyMap();
-        createIntersectionMap();
 
         pacman=new Pacman();
         ghost= new Ghost[1];
@@ -89,55 +86,44 @@ public class Game extends JPanel{
             System.arraycopy(Utils.INITIAL_MAP[i], 0, map[i], 0, map.length);
         }
     }
-    private void createIntersectionMap() {
-        for(int i=0; i<map.length;i++){
-            for(int j=0; j<map[i].length;j++){
-                if(isAtIntersection(i,j)){
-                    intersection_map[i][j]=1;
-                }
-                else
-                    intersection_map[i][j]=0;
-            }
-        }
+    public boolean isAtIntersection(int x, int y,boolean canGoThroughDoor){
 
-
-    }
-    public boolean isAtIntersection(int y, int x){
         int numRoutes=0;
 
-        if(map[x][y]==0 || map[x][y]==2|| map[x][y]==3){
-            if(x!=map.length-1 && (map[x+1][y]==0 || map[x+1][y]==2|| map[x+1][y]==3)){
+        if(map[y][x]!=1){
+            if(y!=map.length-1 && map[y+1][x]!=1 && map[y+1][x]!=-1){
                 numRoutes++;
             }
-            if(x!=0 &&(map[x-1][y]==0 || map[x-1][y]==2 ||  map[x-1][y]==3)){
+            if(y!=0 &&map[y-1][x]!=1&& map[y-1][x]!=-1){
                 numRoutes++;
             }
-            if(y!=map.length-1 &&(map[x][y+1]==0 || map[x][y+1]==2|| map[x][y+1]==3)){
+            if(x!=map.length-1 && map[y][x+1]!=1 && map[y+1][x]!=-1){
                 numRoutes++;
             }
-            if(y!=0 &&(map[x][y-1]==0 || map[x][y-1]==2|| map[x][y-1]==3)){
+            if(x!=0 &&map[y][x-1]!=1 && map[y][x-1]!=-1){
                 numRoutes++;
             }
         }
 
         return numRoutes>2;
     }
-    public boolean[] availableRoutes(int x, int y,int direction){
+    public boolean[] availableRoutes(int x, int y,int direction, boolean canGoThroughDoor){
+
         boolean [] routes= new boolean[4];
         for(boolean r:routes)
             r=false;
 
-        if(x!=map.length-1 && (map[y][x+1]==0 || map[y][x+1]==2) && direction!=3){
-           routes[1]=true;
+        if(y!=map.length-1 && direction!=0 &&  map[y+1][x]!=1 && (map[y+1][x]!=-1|| canGoThroughDoor)){
+           routes[2]=true;
         }
-        if(x!=0 &&(map[y][x-1]==0 || map[y][x-1]==2) && direction!=1){
-            routes[3]=true;
-        }
-        if(y!=map.length-1 &&(map[y+1][x]==0 || map[y+1][x]==2 ) && direction!=0){
-            routes[2]=true;
-        }
-        if(y!=0 &&(map[y-1][x]==0 || map[y-1][x]==2) && direction!=2){
+        if(y!=0  && direction!=2 && map[y-1][x]!=1 && (map[y-1][x]!=-1|| canGoThroughDoor)){
             routes[0]=true;
+        }
+        if(x!=map.length-1 && direction!=3 && map[y][x+1]!=1 && (map[y][x+1]!=-1|| canGoThroughDoor)) {
+            routes[1]=true;
+        }
+        if(x!=0  && direction!=1 && map[y][x-1]!=1 && (map[y][x-1]!=-1|| canGoThroughDoor)){
+            routes[3]=true;
         }
 
         return routes;
@@ -146,6 +132,12 @@ public class Game extends JPanel{
     public void paintComponent(Graphics g){
         super.paintComponent(g);
 
+
+        g.setColor(Color.RED);
+        g.fillRect(ghost[0].target_location[0] * Utils.CELL_LENGTH, ghost[0].target_location[1] * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+
+
+
         //Drawing the map
         for(int i=0; i<map.length;i++){
             for(int j=0; j<map[0].length; j++){
@@ -153,7 +145,7 @@ public class Game extends JPanel{
                     case 0,2->{
                         g.setColor(Color.WHITE);
                         g.setFont(new Font(Font.SERIF, Font.PLAIN,10));
-                        g.drawString(j+","+i,j*Utils.CELL_LENGTH,i*Utils.CELL_LENGTH+Utils.CELL_LENGTH);
+                        g.drawString(i+","+j,j*Utils.CELL_LENGTH,i*Utils.CELL_LENGTH+Utils.CELL_LENGTH);
                     }
                     case -1 -> {
                         g.setColor(Color.gray);
@@ -208,16 +200,16 @@ public class Game extends JPanel{
                 }
             }
         }
-        for(int i=0; i<intersection_map.length; i++){
-            for(int j=0; j<intersection_map[i].length;j++){
-                if(intersection_map[j][i]==1){
-                    g.setColor(Color.GREEN);
-                    g.fillRect(j * Utils.CELL_LENGTH,
-                            i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
-                }
-            }
-        }
 
+//        for(int i=0; i<intersection_map.length; i++){
+//            for(int j=0; j<intersection_map[i].length;j++){
+//                if(intersection_map[j][i]==1 || intersection_map[j][i]==-1){
+//                    g.setColor(Color.GREEN);
+//                    g.fillRect(j * Utils.CELL_LENGTH,
+//                            i * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+//                }
+//            }
+//        }
 
         for(Ghost gh:ghost){
             if(gh.isVisible)
@@ -268,8 +260,7 @@ public class Game extends JPanel{
             g.drawString("READY !",Utils.CELL_LENGTH*9+10,Utils.CELL_LENGTH*12-3);
         }
 
-        g.setColor(Color.RED);
-        g.fillRect(ghost[0].target_location[0] * Utils.CELL_LENGTH, ghost[0].target_location[1] * Utils.CELL_LENGTH, Utils.CELL_LENGTH, Utils.CELL_LENGTH);
+
     }
 
     public void actionPerformed() {
@@ -342,11 +333,11 @@ public class Game extends JPanel{
 
         if (pacman.canMove) {
             if(inTunnel(pacman)) {
-                if(pacman.x_location<-Utils.CELL_LENGTH){
-                    pacman.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH-10;
+                if(pacman.x_location<-Utils.CELL_LENGTH/2){
+                    pacman.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2;
                 }
-                else if(pacman.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH){
-                    pacman.x_location=-Utils.CELL_LENGTH+10;
+                else if(pacman.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2){
+                    pacman.x_location=-Utils.CELL_LENGTH/2;
                 }
             }
             else {
@@ -374,11 +365,11 @@ public class Game extends JPanel{
     private void ghostMove(Ghost ghost){
         if(ghost.canMove){
             if(inTunnel(ghost)) {
-                if(ghost.x_location<-Utils.CELL_LENGTH){
-                    ghost.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH-10;
+                if(ghost.x_location<-Utils.CELL_LENGTH/2){
+                    ghost.x_location=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2;
                 }
-                else if(ghost.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH){
-                    ghost.x_location=-Utils.CELL_LENGTH+10;
+                else if(ghost.x_location>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2){
+                    ghost.x_location=-Utils.CELL_LENGTH/2;
                 }
             }
             else{
@@ -387,7 +378,7 @@ public class Game extends JPanel{
 
             ghost.update();
 
-            if (!checkCollision(ghost.x_direction,ghost.y_direction, ghost)) {   //Checks old direction
+            if (!ghost.inTunnel && !checkCollision(ghost.x_direction,ghost.y_direction, ghost)) {   //Checks old direction
                 ghost.hitWall();
             }
 

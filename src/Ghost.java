@@ -6,11 +6,11 @@ import static java.lang.Math.abs;
 public class Ghost extends Entity {
     private Random rand=new Random();
 
-    private int id;
+    private final int id;
     public int mode;
     private int lastMode;
-    private Game game;
-    private Image [] spriteList;
+    private final Game game;
+    private final Image [] spriteList;
     private Image sprite;
 
     private int modeCounter;
@@ -18,8 +18,8 @@ public class Ghost extends Entity {
 
 
     public int []target_location= new int[2];
-    private int []current_location= new int[2];
-    private int []corner_location= new int[2];
+    private final int []current_location= new int[2];
+    private final int []corner_location= new int[2];
     private long lastProcessed;
 
     private long lastPro;
@@ -32,7 +32,6 @@ public class Ghost extends Entity {
 
     private boolean begOfLevel;
     private boolean flashing;
-    private boolean choseRandom;
     private boolean justStarted;
 
 //    Ghosts are forced to reverse direction by the system anytime the mode changes from: chase-to-scatter,
@@ -90,7 +89,6 @@ public class Ghost extends Entity {
         canMove=true;
         isDead=false;
         flashing=false;
-        choseRandom=false;
         sprite=spriteList[3];
         justStarted=true;
     }
@@ -166,31 +164,27 @@ public class Ghost extends Entity {
         current_location[1]=y_location/Utils.CELL_LENGTH;
 
         if(canMove){
-            if (flashing && System.currentTimeMillis()-flashingStamp>=TimeUtils.FLASHING_SPEED) {
-                flashingStamp=System.currentTimeMillis();
-                currentFrame++;
-                if (currentFrame >= Utils.FRIGHTENED_IMG.length)
-                    currentFrame = 0;
-
-                sprite = Utils.FRIGHTENED_IMG[currentFrame];
-            }
-
-            if(mode!=Utils.FRIGHTENED_MODE && mode!=Utils.DIED_MODE && last_direction!=direction){
-                sprite=spriteList[direction];
-                last_direction=direction;
-            }
-
+            updateFrame();
             updateMode();
-            boolean x_accuracy=(x_location%Utils.CELL_LENGTH==0 || x_location%Utils.CELL_LENGTH==1);
-            boolean y_accuracy=(y_location%Utils.CELL_LENGTH==0 || y_location%Utils.CELL_LENGTH==1);
+            getDirection();
+        }
+    }
+    private void updateFrame() {
+        //Updates flashing frame
+        if (flashing && System.currentTimeMillis()-flashingStamp>=TimeUtils.FLASHING_SPEED) {
+            flashingStamp=System.currentTimeMillis();
 
-            if(game.isAtIntersection(current_location[0],current_location[1]) && x_accuracy &&y_accuracy )
-            {
-                System.out.println("Intersection Cell:"+current_location[0]+","+current_location[1] );
-                System.out.println("Mode"+mode);
-                getTarget();
-                chooseDirection();;
-            }
+            currentFrame++;
+            if (currentFrame >= Utils.FRIGHTENED_IMG.length)
+                currentFrame = 0;
+
+            sprite = Utils.FRIGHTENED_IMG[currentFrame];
+        }
+
+        //Updates frame
+        if(mode!=Utils.FRIGHTENED_MODE && mode!=Utils.DIED_MODE && last_direction!=direction){
+            sprite=spriteList[direction];
+            last_direction=direction;
         }
     }
 
@@ -203,6 +197,26 @@ public class Ghost extends Entity {
         }
     }
 
+    private void getDirection() {
+        //Only want to make a decision once per tile when the ghost first enters the tile
+        //Since the ghost moves by 2 pixels, modulo function can give a 0 or a 1
+
+        boolean x_accuracy=(x_location%Utils.CELL_LENGTH==0 || x_location%Utils.CELL_LENGTH==1);
+        boolean y_accuracy=(y_location%Utils.CELL_LENGTH==0 || y_location%Utils.CELL_LENGTH==1);
+
+        boolean isAtIntersection=game.isAtIntersection(current_location[0],current_location[1],canGoThroughDoor);
+
+        if(current_location[0]==10 && current_location[1]==7 && canGoThroughDoor)
+            isAtIntersection=true;
+        if( !inTunnel && isAtIntersection
+                && x_accuracy && y_accuracy)
+        {
+            System.out.println("Intersection Cell:"+current_location[0]+","+current_location[1] );
+            System.out.println("Mode"+mode);
+            getTarget();
+            chooseDirection();;
+        }
+    }
     private void updateNormalMode(){
 //        int count=modeCounter;
 //        //Goes from Chase to Scatter depending on the time elapsed and the level
@@ -303,7 +317,6 @@ public class Ghost extends Entity {
         }
 
         if(System.currentTimeMillis()-frightenedStamp>=TimeUtils.FRIGHTENED_TIME(level)){
-            choseRandom=false;
             flashing=false;
             lastProcessed+=frightenedStamp;
             isFrightened=false;
@@ -316,16 +329,17 @@ public class Ghost extends Entity {
 
     private void updateDiedMode() {
         if(current_location[0]==9 && current_location[1]==9){
+            direction=1;
             mode=Utils.LEAVEHOUSE_MODE;
             inHouseStamp=System.currentTimeMillis();
             timeToWaitInHouse=1000;
             isDead=false;
             canGoThroughDoor=false;
-
             sprite=spriteList[0];
 
             writeMode();
         }
+
     }
 
     private void getTarget(){
@@ -365,17 +379,21 @@ public class Ghost extends Entity {
                 target_location[1] = corner_location[1];
             }
             case Utils.FRIGHTENED_MODE -> {
-                if (!choseRandom) {
-                    randomTarget();
-                    choseRandom = true;
-                } else {
-                    if (current_location[0] == target_location[0] && current_location[1] == target_location[1])
-                        choseRandom = false;
-                }
+                randomTarget();
             }
             case Utils.DIED_MODE -> {
-                target_location[0] = 9;
-                target_location[1] = 9;
+                if(current_location[0]==10 && current_location[1]==7){
+                    target_location[0] = 10;
+                    target_location[1] = 8;
+                    canGoThroughDoor=true;
+                }else if(current_location[0]==10 && current_location[1]==8){
+                        target_location[0] = 9;
+                        target_location[1] = 9;
+                }
+                else {
+                    target_location[0] = 10;
+                    target_location[1] = 7;
+                }
             }
         }
 
@@ -477,7 +495,7 @@ public class Ghost extends Entity {
             }
         }
 
-        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction);
+        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction,canGoThroughDoor);
 
         int newDirection=-1;
 
@@ -504,13 +522,14 @@ public class Ghost extends Entity {
 
         direction=newDirection;
 
+
         directionConverter();
     }
     @Override
     public void dies() {
         mode=Utils.DIED_MODE;
-        canGoThroughDoor=true;
         isDead=true;
+        canGoThroughDoor=true;
 
         sprite=Utils.DEAD_IMG[0];
         timeToWaitInHouse=1500;
@@ -586,7 +605,7 @@ public class Ghost extends Entity {
         int numRoutes=0;
         int onlyRoute=-1;
 
-        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction);
+        boolean [] routes= game.availableRoutes(current_location[0],current_location[1],direction,canGoThroughDoor);
 
         for(int i=0; i<4; i++){
             if(routes[i]){
@@ -594,7 +613,7 @@ public class Ghost extends Entity {
                 numRoutes++;
             }
         }
-        if(numRoutes>1){
+        if(numRoutes!=1){
             do {
                 direction = rand.nextInt(4);
             } while (!routes[direction]);
@@ -631,4 +650,5 @@ public class Ghost extends Entity {
             }
         }
     }
+
 }
