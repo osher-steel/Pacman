@@ -2,9 +2,8 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public final class Animations implements ActionListener {
+public final class Animations{
     Game game;
-    Timer timer;
 
     boolean gameOver;
     boolean lostLife;
@@ -21,8 +20,6 @@ public final class Animations implements ActionListener {
 
     public Animations(Game game){
         this.game=game;
-        timer= new Timer(1,this);
-        timer.start();
 
         gameOver=false;
         lostLife=false;
@@ -31,9 +28,7 @@ public final class Animations implements ActionListener {
         pause=false;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        game.actionPerformed();
+    public void actionPerformed() {
 
         if(lostLife&& !game.pacman.deathAnimation){
             lostLife=false;
@@ -49,7 +44,10 @@ public final class Animations implements ActionListener {
         if(begOfLevel && System.currentTimeMillis()-begOfLeveLTimeStamp>=TimeUtils.READY_ANIMATION){
             for (Ghost g : game.ghost) {
                 g.canMove=true;
+                g.moveNow=true;
             }
+
+            game.ghostCanMove=true;
 
             game.pacman.canMove= true;
             begOfLevel=false;
@@ -58,8 +56,7 @@ public final class Animations implements ActionListener {
 
         if(gameOver && !lostLife && System.currentTimeMillis()-gameOverTimeStamp>=TimeUtils.GAMEOVER_ANIMATION){
             gameOver=false;
-            game.parent.returnToMenu(game.score);
-            timer.stop();
+            game.gameOver();
         }
 
         if(pause && System.currentTimeMillis()-pauseStamp>=pauseTime){
@@ -73,7 +70,7 @@ public final class Animations implements ActionListener {
 
     public void lostLife(){
         lostLife=true;
-
+        game.pacman.canMove=false;
         game.pacman.deathAnimation();
         for(Ghost g:game.ghost){
             g.makeInvisible();
@@ -82,17 +79,16 @@ public final class Animations implements ActionListener {
 
     public void finishedLevel(){
         game.pacman.canMove=false;
-        for(Ghost g:game.ghost){
+        game.pacman.updateFrame(true);
+        for(Ghost g:game.ghost) {
             g.makeInvisible();
         }
-        game.fruitVisible=false;
-
+        MAPHANDLER.FRUIT_VISIBLE=false;
         finishedLevel=true;
         finishedLevelTimeStamp=System.currentTimeMillis();
     }
 
     public void newLevel(){
-        game.copyMap();
         game.pacman.init();
         game.pacman.canMove=false;
         for(Ghost g:game.ghost){
@@ -111,9 +107,8 @@ public final class Animations implements ActionListener {
         game.pacman.canMove=false;
         for(Ghost g:game.ghost){
             g.init(false);
-            g.canMove=false;
         }
-
+        game.ghostCanMove=false;
         game.drawReady=true;
         begOfLevel=true;
         begOfLeveLTimeStamp=System.currentTimeMillis();
@@ -121,7 +116,7 @@ public final class Animations implements ActionListener {
 
     private void gameOver(){
         game.pacman.isVisible=false;
-        game.fruitVisible=false;
+        MAPHANDLER.FRUIT_VISIBLE=false;
         game.gameOver=true;
 
         gameOver=true;

@@ -1,10 +1,13 @@
 import java.awt.*;
 
 public class Pacman extends Entity{
+    public  int speed=TimeUtils.SPEED;
     private Image sprite;
     private Image[][] spriteList;
     private Image[] spriteDeathList;
-    public int new_x_direction, new_y_direction;
+
+    Point new_movement= new Point();
+
     int deathCounter;
     boolean deathAnimation;
     int deathSpeed;
@@ -13,7 +16,6 @@ public class Pacman extends Entity{
     Pacman(){
         isPacman=true;
         isVisible=false;
-        isFrightened=false;
         deathAnimation=false;
         spriteList=new Image[3][4];
         spriteDeathList=new Image[13];
@@ -55,22 +57,22 @@ public class Pacman extends Entity{
 
     public void init(){
         sprite=spriteList[1][0];
-        x_location=10*Utils.CELL_LENGTH;
-        y_location=15*Utils.CELL_LENGTH;
+        coordinates.x=10*Utils.CELL_LENGTH;
+        coordinates.y=15*Utils.CELL_LENGTH;
 
-        direction=1;
-        last_direction=direction;
-        x_direction=1;
-        y_direction=0;
-        rotate(x_direction,y_direction);
+        compass_direction=1;
+        compass_last_direction=compass_direction;
+        movement.x=speed;
+        movement.y=0;
+        rotate(movement.x,movement.y);
 
-        new_x_direction=0;
-        new_y_direction=0;
+        new_movement.x=speed;
+        new_movement.y=0;
         canMove=true;
         isVisible=true;
     }
 
-    public void update() {
+    public void updateFrame(boolean endOfLevel) {
 
         if (canMove) {
             frameCounter++;
@@ -82,12 +84,12 @@ public class Pacman extends Entity{
                 if (currentFrame > 2)
                     currentFrame = 0;
 
-                sprite = spriteList[currentFrame][direction];
+                sprite = spriteList[currentFrame][compass_direction];
             }
 
-            if (last_direction != direction) {
-                sprite = spriteList[currentFrame][direction];
-                last_direction = direction;
+            if (compass_last_direction != compass_direction) {
+                sprite = spriteList[currentFrame][compass_direction];
+                compass_last_direction = compass_direction;
             }
         }
         else if(deathAnimation){
@@ -103,8 +105,45 @@ public class Pacman extends Entity{
             }
             frameCounter++;
         }
+        else if(endOfLevel)
+            sprite=spriteList[0][0];
     }
 
+    public void update(){
+        updateFrame(false);
+
+        if (canMove) {
+            if(MAPHANDLER.inTunnel(this)) {
+                if(coordinates.x<-Utils.CELL_LENGTH/2){
+                    coordinates.x=Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2;
+                }
+                else if(coordinates.x>Utils.JFRAME_WIDTH+Utils.CELL_LENGTH/2){
+                    coordinates.x=-Utils.CELL_LENGTH/2;
+                }
+            }
+            else {
+               inTunnel=false;
+
+                if (MAPHANDLER.checkCollision(new_movement.x, new_movement.y, this)) {  //Checks new direction
+                    movement.x = new_movement.x;
+                    movement.y = new_movement.y;
+
+                    rotate(new_movement.x, new_movement.y);
+                }
+                else if (!MAPHANDLER.checkCollision(movement.x, movement.y, this)) {   //Checks old direction
+                    last_movement.x = movement.x;
+                    last_movement.y = movement.y;
+                   movement.x = 0;
+                   movement.y = 0;
+                }
+                speed = TimeUtils.SPEED;
+            }
+            coordinates.x += movement.x;
+            coordinates.y += movement.y;
+
+            TargetHandler.setPacmanLoc(coordinates);
+        }
+    }
     @Override
     public void dies() {
 
@@ -118,4 +157,5 @@ public class Pacman extends Entity{
     public void setFrameSpeed(int frameSpeed) {
         this.frameSpeed = frameSpeed;
     }
+
 }

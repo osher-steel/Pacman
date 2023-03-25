@@ -40,7 +40,7 @@ public class Menu extends JPanel implements ActionListener {
 
         pointTimer=0;
         fruitTimer=10000;
-        pacmanDelay=TimeUtils.PACMAN_DELAY(0,true);
+        pacmanDelay=TimeUtils.PACMAN_DELAY(0,true,false);
         generateNewFruit();
 
         BufferedImage temp_buff;
@@ -77,7 +77,7 @@ public class Menu extends JPanel implements ActionListener {
 
         if(fruitVisible)
             g.drawImage(fruit.getSprite(),fruit_x,fruit_y,this);
-        g.drawImage(pacman.getSprite(),pacman.x_location, pacman.y_location, this);
+        g.drawImage(pacman.getSprite(),pacman.coordinates.x, pacman.coordinates.y, this);
 
         if(drawFruitPoints){
             g.setColor(Color.WHITE);
@@ -109,30 +109,30 @@ public class Menu extends JPanel implements ActionListener {
 
     public void restart(){
         timer.restart();
-        pacman.x_location=Utils.CELL_LENGTH*10;
-        pacman.y_location=Utils.CELL_LENGTH*18;
-        pacman.x_direction=0;
-        pacman.y_direction=0;
+        pacman.coordinates.x=Utils.CELL_LENGTH*10;
+        pacman.coordinates.y=Utils.CELL_LENGTH*18;
+        pacman.movement.x=0;
+        pacman.movement.y=0;
         generateNewFruit();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if(pacmanDelay<=0){
-            pacman.x_location+=pacman.x_direction;
-            pacman.y_location+= pacman.y_direction;
+            pacman.coordinates.x+=pacman.movement.x;
+            pacman.coordinates.y+= pacman.movement.y;
 
-            if(pacman.x_location>=Utils.CELL_LENGTH*Utils.NUM_COLUMNS && pacman.x_direction==pacman.speed)
-                pacman.x_location=-Utils.CELL_LENGTH;
-            else if(pacman.x_location<=0 && pacman.x_direction==-pacman.speed)
-                pacman.x_location=Utils.CELL_LENGTH*Utils.NUM_COLUMNS+ Utils.CELL_LENGTH;
-            else if(pacman.y_location>=Utils.CELL_LENGTH*Utils.NUM_ROWS+Utils.NUM_ROWS*4+10 && pacman.y_direction==pacman.speed)
-                pacman.y_location=-Utils.CELL_LENGTH;
-            else if(pacman.y_location<=0 && pacman.y_direction==-pacman.speed)
-                pacman.y_location=Utils.CELL_LENGTH*Utils.NUM_ROWS+Utils.NUM_ROWS*4+Utils.CELL_LENGTH;
+            if(pacman.coordinates.x>=Utils.CELL_LENGTH*Utils.NUM_COLUMNS && pacman.movement.x==pacman.speed)
+                pacman.coordinates.x=-Utils.CELL_LENGTH;
+            else if(pacman.coordinates.x<=0 && pacman.movement.x==-pacman.speed)
+                pacman.coordinates.x=Utils.CELL_LENGTH*Utils.NUM_COLUMNS+ Utils.CELL_LENGTH;
+            else if(pacman.coordinates.y>=Utils.CELL_LENGTH*Utils.NUM_ROWS+Utils.NUM_ROWS*4+10 && pacman.movement.y==pacman.speed)
+                pacman.coordinates.y=-Utils.CELL_LENGTH;
+            else if(pacman.coordinates.y<=0 && pacman.movement.y==-pacman.speed)
+                pacman.coordinates.y=Utils.CELL_LENGTH*Utils.NUM_ROWS+Utils.NUM_ROWS*4+Utils.CELL_LENGTH;
 
-            if(pacman.x_location>=fruit_x-15 && pacman.x_location<=fruit_x+15
-                    && pacman.y_location>=fruit_y-15 && pacman.y_location<=fruit_y+15){
+            if(pacman.coordinates.x>=fruit_x-15 && pacman.coordinates.x<=fruit_x+15
+                    && pacman.coordinates.y>=fruit_y-15 && pacman.coordinates.y<=fruit_y+15){
                 fruitVisible=false;
                 drawFruitPoints=true;
                 fruitTimer=10000;
@@ -141,7 +141,7 @@ public class Menu extends JPanel implements ActionListener {
                 points=fruit.getPoints();
             }
 
-            pacman.update();
+            pacman.updateFrame(true);
 
             if(drawFruitPoints)
                 pointTimer++;
@@ -154,7 +154,7 @@ public class Menu extends JPanel implements ActionListener {
             fruitTimer++;
             generateNewFruit();
             repaint();
-            pacmanDelay=TimeUtils.PACMAN_DELAY(0,true);
+            pacmanDelay=TimeUtils.PACMAN_DELAY(0,true,false);
         }
         else
             pacmanDelay--;
@@ -180,24 +180,24 @@ public class Menu extends JPanel implements ActionListener {
 
     public void keyPressed(KeyEvent e) {
         if(e.getKeyCode()==KeyEvent.VK_UP){
-            pacman.x_direction=0;
-            pacman.y_direction=-pacman.speed;
-            pacman.direction=0;
+            pacman.movement.x=0;
+            pacman.movement.y=-pacman.speed;
+            pacman.compass_direction=0;
         }
         else if(e.getKeyCode()==KeyEvent.VK_DOWN){
-            pacman.x_direction=0;
-            pacman.y_direction=pacman.speed;
-            pacman.direction=2;
+            pacman.movement.x=0;
+            pacman.movement.y=pacman.speed;
+            pacman.compass_direction=2;
         }
         else if(e.getKeyCode()==KeyEvent.VK_RIGHT){
-            pacman.x_direction=pacman.speed;
-            pacman.y_direction=0;
-            pacman.direction=1;
+            pacman.movement.x=pacman.speed;
+            pacman.movement.y=0;
+            pacman.compass_direction=1;
         }
         else if(e.getKeyCode()==KeyEvent.VK_LEFT){
-            pacman.x_direction=-pacman.speed;
-            pacman.y_direction=0;
-            pacman.direction=3;
+            pacman.movement.x=-pacman.speed;
+            pacman.movement.y=0;
+            pacman.compass_direction=3;
         }
     }
 

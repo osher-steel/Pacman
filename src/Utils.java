@@ -7,6 +7,10 @@ public class Utils {
     public static final int JFRAME_HEIGHT=Utils.CELL_LENGTH*Utils.NUM_ROWS+Utils.NUM_ROWS*4+10;
     public static final int JFRAME_WIDTH=Utils.CELL_LENGTH*Utils.NUM_COLUMNS;
 
+    public static boolean DRAW_TARGETS=false;
+
+    public static final int NUM_GHOSTS=4;
+
     public final static int RED=20;
     public final static int PINK=5;
     public final static int CYAN=10;
@@ -16,7 +20,7 @@ public class Utils {
     public final static int NUM_COLUMNS=21;
     public final static int NUM_ROWS=21;
     public final static int NUM_FOOD=150;
-    public final static int LIVES=3;
+    public final static int LIVES=1;
 
     public final static int CHASE_MODE=80;
     public final static int SCATTER_MODE=81;

@@ -3,12 +3,12 @@ import java.awt.*;
 public abstract class Entity {
     public boolean inTunnel;
 
-    public int x_location, y_location;
-    public int x_direction, y_direction;
-    public int last_x_direction, last_y_direction;
+    public Point coordinates= new Point();
+    public Point movement= new Point();
+    public Point last_movement= new Point();
 
-    public int direction;
-    public int last_direction;
+    public int compass_direction;
+    public int compass_last_direction;
 
     public int speed=TimeUtils.SPEED;
     public int level;
@@ -20,30 +20,24 @@ public abstract class Entity {
     public boolean isPacman;
     public boolean isVisible;
     public boolean isDead;
-    public boolean isFrightened;
 
     public boolean canGoThroughDoor;
     public boolean canMove;
 
     public abstract void dies();
     public abstract Image getSprite();
-
     public  void rotate(int x,int y){
         if(x==-speed){
-            direction=3;
+            compass_direction=3;
         }
         else if(x==speed){
-            direction=1;
+            compass_direction=1;
         }
         else if(y==-speed){
-            direction=0;
+            compass_direction=0;
         }
         else if(y==speed){
-            direction=2;
+            compass_direction=2;
         }
-    }
-
-    public void setLevel(int level){
-        this.level=level;
     }
 }
